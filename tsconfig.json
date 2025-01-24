@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+      "target": "ES2020", // Target JavaScript version
+      "module": "ESNext", // Use ES modules
+      "lib": ["ES2020"], // Library files to include
+      "moduleResolution": "node", // Resolve modules like Node.js
+      "esModuleInterop": true, // Enable ES module interop
+      "strict": true, // Enable all strict type-checking options
+      "outDir": ".build", // Output directory for compiled files
+      "rootDir": ".", // Root directory for TypeScript files
+      "skipLibCheck": true // Skip type-checking of declaration files
+    },
+    "include": ["**/*.ts"], // Include all TypeScript files
+    "exclude": ["node_modules"] // Exclude node_modules
+}

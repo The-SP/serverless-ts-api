@@ -10,7 +10,7 @@ const client = new Client({
   host: process.env.PGHOST,
   database: process.env.PGDATABASE,
   password: process.env.PGPASSWORD,
-  port: process.env.PGPORT,
+  port: parseInt(process.env.PGPORT || "5432"),
 });
 
 client.connect();

@@ -1,8 +1,10 @@
-"use strict";
+import * as awsLambda from "aws-lambda";
 
-import client from "./db.js";
+import client from "./db";
 
-const hello = async (event) => {
+const hello = async (
+  event: awsLambda.APIGatewayProxyEvent
+): Promise<awsLambda.APIGatewayProxyResult> => {
   return {
     statusCode: 200,
     body: JSON.stringify(
@@ -16,7 +18,9 @@ const hello = async (event) => {
   };
 };
 
-const getTasks = async (event) => {
+const getTasks = async (
+  event: awsLambda.APIGatewayProxyEvent
+): Promise<awsLambda.APIGatewayProxyResult> => {
   const res = await client.query("SELECT * FROM tasks");
   return {
     statusCode: 200,
@@ -24,7 +28,7 @@ const getTasks = async (event) => {
   };
 };
 
-const getTask = async (event) => {
+const getTask = async (event: awsLambda.APIGatewayProxyEvent) => {
   const taskId = parseInt(event.pathParameters.id);
   const res = await client.query("SELECT * FROM TASKS WHERE id=$1", [taskId]);
   if (res.rows.length === 0) {
@@ -39,7 +43,7 @@ const getTask = async (event) => {
   };
 };
 
-const createTask = async (event) => {
+const createTask = async (event: awsLambda.APIGatewayProxyEvent) => {
   const { title } = JSON.parse(event.body);
   if (!title) {
     return {
@@ -59,7 +63,7 @@ const createTask = async (event) => {
   };
 };
 
-const updateTask = async (event) => {
+const updateTask = async (event: awsLambda.APIGatewayProxyEvent) => {
   const taskId = parseInt(event.pathParameters.id);
   const { title } = JSON.parse(event.body);
   const res = await client.query(
@@ -72,7 +76,7 @@ const updateTask = async (event) => {
   };
 };
 
-const deleteTask = async (event) => {
+const deleteTask = async (event: awsLambda.APIGatewayProxyEvent) => {
   const taskId = parseInt(event.pathParameters.id);
   await client.query("DELETE FROM tasks WHERE id = $1", [taskId]);
   return {
