@@ -1,8 +1,8 @@
 "use strict";
 
-const client = require("./db");
+import client from "./db.js";
 
-module.exports.hello = async (event) => {
+const hello = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify(
@@ -16,7 +16,7 @@ module.exports.hello = async (event) => {
   };
 };
 
-module.exports.getTasks = async (event) => {
+const getTasks = async (event) => {
   const res = await client.query("SELECT * FROM tasks");
   return {
     statusCode: 200,
@@ -24,7 +24,7 @@ module.exports.getTasks = async (event) => {
   };
 };
 
-module.exports.getTask = async (event) => {
+const getTask = async (event) => {
   const taskId = parseInt(event.pathParameters.id);
   const res = await client.query("SELECT * FROM TASKS WHERE id=$1", [taskId]);
   if (res.rows.length === 0) {
@@ -39,7 +39,7 @@ module.exports.getTask = async (event) => {
   };
 };
 
-module.exports.createTask = async (event) => {
+const createTask = async (event) => {
   const { title } = JSON.parse(event.body);
   if (!title) {
     return {
@@ -59,7 +59,7 @@ module.exports.createTask = async (event) => {
   };
 };
 
-module.exports.updateTask = async (event) => {
+const updateTask = async (event) => {
   const taskId = parseInt(event.pathParameters.id);
   const { title } = JSON.parse(event.body);
   const res = await client.query(
@@ -72,7 +72,7 @@ module.exports.updateTask = async (event) => {
   };
 };
 
-module.exports.deleteTask = async (event) => {
+const deleteTask = async (event) => {
   const taskId = parseInt(event.pathParameters.id);
   await client.query("DELETE FROM tasks WHERE id = $1", [taskId]);
   return {
@@ -80,3 +80,5 @@ module.exports.deleteTask = async (event) => {
     body: JSON.stringify({ message: `Task ${taskId} deleted successfully` }),
   };
 };
+
+export { hello, getTasks, getTask, createTask, updateTask, deleteTask };

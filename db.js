@@ -1,6 +1,9 @@
-const { Client } = require("pg");
+import pg from "pg";
+import dotenv from "dotenv";
 
-require("dotenv").config();
+dotenv.config();
+
+const { Client } = pg;
 
 const client = new Client({
   user: process.env.PGUSER,
@@ -12,4 +15,4 @@ const client = new Client({
 
 client.connect();
 
-module.exports = client;
+export default client;

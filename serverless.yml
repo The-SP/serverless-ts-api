@@ -49,3 +49,7 @@ functions:
           
 plugins:
   - serverless-offline
+
+custom:
+  serverless-offline:
+    reloadHandler: true       # Enable auto-reload (default is true)
