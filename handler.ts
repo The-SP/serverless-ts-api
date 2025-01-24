@@ -29,6 +29,10 @@ const getTasks = async (
 };
 
 const getTask = async (event: awsLambda.APIGatewayProxyEvent) => {
+  if (!event.pathParameters?.id) {
+    throw new Error("Missing required parameter: task id");
+  }
+
   const taskId = parseInt(event.pathParameters.id);
   const res = await client.query("SELECT * FROM TASKS WHERE id=$1", [taskId]);
   if (res.rows.length === 0) {
@@ -44,6 +48,8 @@ const getTask = async (event: awsLambda.APIGatewayProxyEvent) => {
 };
 
 const createTask = async (event: awsLambda.APIGatewayProxyEvent) => {
+  if (!event.body) throw new Error("Missing required parameter: body");
+
   const { title } = JSON.parse(event.body);
   if (!title) {
     return {
@@ -58,13 +64,17 @@ const createTask = async (event: awsLambda.APIGatewayProxyEvent) => {
   );
 
   return {
-    statusCode: 200,
+    statusCode: 201,
     body: JSON.stringify(res.rows[0]),
   };
 };
 
 const updateTask = async (event: awsLambda.APIGatewayProxyEvent) => {
-  const taskId = parseInt(event.pathParameters.id);
+  if (!event.pathParameters?.id)
+    throw new Error("Missing required parameter: task id");
+  if (!event.body) throw new Error("Missing required parameter: body");
+
+  const taskId = parseInt(event.pathParameters?.id);
   const { title } = JSON.parse(event.body);
   const res = await client.query(
     "UPDATE tasks SET title = $1 WHERE id = $2 RETURNING *",
@@ -77,7 +87,11 @@ const updateTask = async (event: awsLambda.APIGatewayProxyEvent) => {
 };
 
 const deleteTask = async (event: awsLambda.APIGatewayProxyEvent) => {
-  const taskId = parseInt(event.pathParameters.id);
+  if (!event.pathParameters?.id) {
+    throw new Error("Missing required parameter: task id");
+  }
+
+  const taskId = parseInt(event.pathParameters?.id);
   await client.query("DELETE FROM tasks WHERE id = $1", [taskId]);
   return {
     statusCode: 200,
