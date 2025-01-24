@@ -1,0 +1,51 @@
+service: my-serverless-app
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: hello
+          method: get
+
+  getTasks:
+    handler: handler.getTasks
+    events:
+      - http:
+          path: tasks
+          method: get
+
+  getTask:
+    handler: handler.getTask
+    events:
+      - http:
+          path: tasks/{id}
+          method: get
+
+  createTask:
+    handler: handler.createTask
+    events:
+      - http:
+          path: tasks/create
+          method: post
+
+  updateTask:
+    handler: handler.updateTask
+    events:
+      - http:
+          path: tasks/update/{id}
+          method: put
+
+  deleteTask:
+    handler: handler.deleteTask
+    events:
+      - http:
+          path: tasks/delete/{id}
+          method: delete
+          
+plugins:
+  - serverless-offline
