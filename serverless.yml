@@ -39,7 +39,14 @@ functions:
       - http:
           path: tasks/delete/{id}
           method: delete
-  
+
+  toggleCompletionStatus:
+    handler: handler.toggleTaskCompletion
+    events:
+      - http:
+          path: tasks/toggle/{id}
+          method: get
+
   taskAnalytics:
     handler: handler.taskAnalytics
     events: 

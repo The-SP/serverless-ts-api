@@ -7,6 +7,7 @@ import {
   updateTask,
   deleteTask,
   taskAnalytics,
+  toggleTaskCompletion,
 } from "./handler";
 import client from "./db";
 
@@ -164,33 +165,84 @@ describe("updateTask funciton", () => {
       "Missing required parameter: body"
     );
   });
+});
 
-  describe("deleteTask funciton", () => {
-    it("should delete a task and return 200 status", async () => {
-      const fakeEvent = {
-        pathParameters: { id: "1" },
-      } as unknown as awsLambda.APIGatewayProxyEvent;
+describe("deleteTask funciton", () => {
+  it("should delete a task and return 200 status", async () => {
+    const fakeEvent = {
+      pathParameters: { id: "1" },
+    } as unknown as awsLambda.APIGatewayProxyEvent;
 
-      mockedClient.query.mockResolvedValueOnce({ rows: [] } as never);
+    mockedClient.query.mockResolvedValueOnce({ rows: [] } as never);
 
-      const expected = {
-        statusCode: 200,
-        body: JSON.stringify({ message: "Task 1 deleted successfully" }),
-      };
+    const expected = {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Task 1 deleted successfully" }),
+    };
 
-      const result = await deleteTask(fakeEvent);
-      expect(result).toEqual(expected);
+    const result = await deleteTask(fakeEvent);
+    expect(result).toEqual(expected);
+  });
+
+  it("should throw an error if task ID is missing", async () => {
+    const fakeEvent = {
+      pathParameters: {}, // Simulate missing parameters
+    } as unknown as awsLambda.APIGatewayProxyEvent;
+
+    expect(deleteTask(fakeEvent)).rejects.toThrow(
+      "Missing required parameter: task id"
+    );
+  });
+});
+
+describe("toggleTaskCompletion funciton", () => {
+  it("should toggle the completed status of an existing task", async () => {
+    const fakeEvent = {
+      pathParameters: { id: "1" },
+    } as unknown as awsLambda.APIGatewayProxyEvent;
+
+    (mockedClient.query as jest.Mock).mockResolvedValueOnce({
+      rows: [{ id: 1, title: "Test Task", completed: false }],
+    });
+    (mockedClient.query as jest.Mock).mockResolvedValueOnce({
+      rows: [{ id: 1, title: "Test Task", completed: true }],
     });
 
-    it("should throw an error if task ID is missing", async () => {
-      const fakeEvent = {
-        pathParameters: {}, // Simulate missing parameters
-      } as unknown as awsLambda.APIGatewayProxyEvent;
+    const expected = {
+      statusCode: 200,
+      body: JSON.stringify({ id: 1, title: "Test Task", completed: true }),
+    };
 
-      expect(deleteTask(fakeEvent)).rejects.toThrow(
-        "Missing required parameter: task id"
-      );
+    const result = await toggleTaskCompletion(fakeEvent);
+    expect(result).toEqual(expected);
+  });
+
+  it("should return 400 if task doesn't exist", async () => {
+    const fakeEvent = {
+      pathParameters: { id: "1" },
+    } as unknown as awsLambda.APIGatewayProxyEvent;
+
+    (mockedClient.query as jest.Mock).mockResolvedValueOnce({
+      rows: [],
     });
+
+    const result = await toggleTaskCompletion(fakeEvent);
+    const expected = {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Task not found." }),
+    };
+    expect(result).toEqual(expected);
+  });
+
+  it("should throw an error if the body is missing", async () => {
+    const fakeEvent = {
+      pathParameters: { id: "1" },
+      body: null,
+    } as unknown as awsLambda.APIGatewayProxyEvent;
+
+    await expect(updateTask(fakeEvent)).rejects.toThrow(
+      "Missing required parameter: body"
+    );
   });
 });
 
@@ -217,5 +269,23 @@ describe("taskAnalytics function", () => {
     const actual = await taskAnalytics(fakeEvent);
 
     expect(actual).toEqual(expected);
+  });
+
+  it("should return 500 on database errors", async () => {
+    const fakeEvent = {} as awsLambda.APIGatewayProxyEvent;
+
+    (mockedClient.query as jest.Mock).mockRejectedValueOnce(
+      new Error("DB Error")
+    );
+
+    const result = await taskAnalytics(fakeEvent);
+    const expected = {
+      statusCode: 500,
+      body: JSON.stringify({
+        context: "task-analytics",
+        error: "Internal Server Error",
+      }),
+    };
+    expect(result).toEqual(expected);
   });
 });

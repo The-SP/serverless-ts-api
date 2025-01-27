@@ -70,6 +70,39 @@ const updateTask = async (event: awsLambda.APIGatewayProxyEvent) => {
   };
 };
 
+const toggleTaskCompletion = async (event: awsLambda.APIGatewayProxyEvent) => {
+  try {
+    if (!event.pathParameters?.id)
+      throw new Error("Missing required parameter: task id");
+    const taskId = parseInt(event.pathParameters?.id);
+    const res = await client.query("SELECT * from tasks WHERE id=$1", [taskId]);
+    if (res.rows.length === 0)
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Task not found." }),
+      };
+    const task = res.rows[0];
+    const newCompletionStatus = !task.completed;
+    const updatedRes = await client.query(
+      "UPDATE tasks SET completed=$2 WHERE id=$1 RETURNING *",
+      [taskId, newCompletionStatus]
+    );
+    return {
+      statusCode: 200,
+      body: JSON.stringify(updatedRes.rows[0]),
+    };
+  } catch (err) {
+    console.error("Error toggling task completion:", err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        context: "Toggle task completion",
+        error: "Internal Server Error",
+      }),
+    };
+  }
+};
+
 const deleteTask = async (event: awsLambda.APIGatewayProxyEvent) => {
   if (!event.pathParameters?.id) {
     throw new Error("Missing required parameter: task id");
@@ -143,6 +176,7 @@ export {
   createTask,
   updateTask,
   deleteTask,
+  toggleTaskCompletion,
   taskAnalytics,
   taskReminders,
 };
