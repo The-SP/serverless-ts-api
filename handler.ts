@@ -83,4 +83,66 @@ const deleteTask = async (event: awsLambda.APIGatewayProxyEvent) => {
   };
 };
 
-export { getTasks, getTask, createTask, updateTask, deleteTask };
+const taskAnalytics = async (event: awsLambda.APIGatewayProxyEvent) => {
+  try {
+    const res = await client.query(`
+        SELECT
+            COUNT(*) AS "totalTasks",
+            SUM(CASE WHEN completed = TRUE THEN 1 ELSE 0 END) AS "completedTasks"
+        FROM tasks
+    `);
+
+    const analytics = res.rows[0];
+    const totalTasks = parseInt(analytics.totalTasks);
+    const completedTasks = parseInt(analytics.completedTasks);
+    const completionRate =
+      totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        totalTasks: analytics.totalTasks,
+        completedTasks: analytics.completedTasks,
+        completionRate: `${Math.round(completionRate)}%`,
+      }),
+    };
+  } catch (err) {
+    console.error("Error fetching task analytics:", err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        context: "task-analytics",
+        error: "Internal Server Error",
+      }),
+    };
+  }
+};
+
+const taskReminders = async (event: awsLambda.APIGatewayProxyEvent) => {
+  try {
+    const res = await client.query(`
+        SELECT * FROM tasks WHERE completed = false;
+    `);
+    const incompleteTasks = res.rows;
+    console.log(`Sending reminders for ${incompleteTasks.length} tasks...`);
+
+    incompleteTasks.forEach((task) => {
+      const currentDateTime = new Date().toISOString();
+      const msg = `[${currentDateTime}] Reminder: ${task.title} is not completed yet.`;
+      console.log(msg);
+    });
+    console.log("All reminders have been sent.");
+  } catch (err) {
+    console.error("Error sending task reminders:", err);
+  }
+};
+
+export {
+  getTasks,
+  getTask,
+  createTask,
+  updateTask,
+  deleteTask,
+  taskAnalytics,
+  taskReminders,
+};

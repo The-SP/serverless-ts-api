@@ -6,6 +6,7 @@ import {
   createTask,
   updateTask,
   deleteTask,
+  taskAnalytics,
 } from "./handler";
 import client from "./db";
 
@@ -190,5 +191,31 @@ describe("updateTask funciton", () => {
         "Missing required parameter: task id"
       );
     });
+  });
+});
+
+describe("taskAnalytics function", () => {
+  it("should return complete analytics if tasks exist", async () => {
+    const fakeEvent = {} as awsLambda.APIGatewayProxyEvent;
+
+    const mockRow = { totalTasks: "23", completedTasks: "10" };
+    (mockedClient.query as jest.Mock).mockResolvedValueOnce({
+      rows: [mockRow],
+    });
+
+    const expectedCompletionRate =
+      (parseInt(mockRow.completedTasks) / parseInt(mockRow.totalTasks)) * 100;
+
+    const expected = {
+      statusCode: 200,
+      body: JSON.stringify({
+        ...mockRow,
+        completionRate: `${Math.round(expectedCompletionRate)}%`,
+      }),
+    };
+
+    const actual = await taskAnalytics(fakeEvent);
+
+    expect(actual).toEqual(expected);
   });
 });

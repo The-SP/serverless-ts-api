@@ -39,6 +39,20 @@ functions:
       - http:
           path: tasks/delete/{id}
           method: delete
+  
+  taskAnalytics:
+    handler: handler.taskAnalytics
+    events: 
+      - http:
+          path: tasks/analytics
+          method: get
+
+  taskReminders:
+    handler: handler.taskReminders
+    events: 
+      - schedule:
+          rate: rate(1 minute)
+          enabled: true
           
 plugins:
   - serverless-offline
